@@ -1,5 +1,7 @@
 # sqlite
-SQLite3 persistence layer for gun!
+SQLite3 persistence layer for [gun](https://github.com/amark/gun)!
+
+Or in other words: If you use gun as your API to SQLite3, you'll get free data sync and replication across different machines running SQLite3! Check out the gun docs for how to set that up.
 
 Get it by
 
@@ -18,4 +20,4 @@ var gun = Gun({
 
 Enjoy!
 
-Or: Complain about bugs.
+Or: Complain about bugs. :)
