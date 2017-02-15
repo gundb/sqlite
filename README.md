@@ -18,6 +18,8 @@ var gun = Gun({
 });
 ```
 
+Check the gun docs on how to read/write data, and sync will happen automatically.
+
 Enjoy!
 
 Or: Complain about bugs. :)
