@@ -1,0 +1,26 @@
+{
+  "name": "sqlite.gun",
+  "version": "1.0.0",
+  "description": "SQLite3 persistence layer for gun",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha"
+  },
+  "keywords": [
+    "gun",
+    "gundb",
+    "sqlite",
+    "sqlite3",
+    "driver"
+  ],
+  "author": "Mark Nadal",
+  "license": "MIT",
+  "dependencies": {
+    "sqlite3": "^3.1.4",
+    "masterquest-sqlite3": "^1.0.3",
+    "gun": "^0.6.0"
+  },
+  "devDependencies": {
+    "mocha": "^3.0.0"
+  }
+}
