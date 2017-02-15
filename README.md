@@ -7,7 +7,7 @@ Get it by
 
 Use by
 
-```
+```javascript
 var Gun = require('gun');
 require('sqlite.gun');
 
