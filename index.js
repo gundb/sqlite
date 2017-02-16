@@ -38,7 +38,7 @@ Gun.on('put', function(at){
 			var data = {id: id, soul: soul, field: field, state: Gun.state.is(node, field)}, tmp;
 			// Check to see if what we have on disk is more recent.
 			if(record && data.state < parseFloat(record.state)){ return }
-			if(tmp = value['#']){ // TODO: Don't hardcode.
+			if(value && (tmp = value['#'])){ // TODO: Don't hardcode.
 				data.relation = tmp;
 			} else {
 				data.value = JSON.stringify(value);

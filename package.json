@@ -1,6 +1,6 @@
 {
   "name": "sqlite.gun",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "SQLite3 persistence layer for gun",
   "main": "index.js",
   "scripts": {
