@@ -31,7 +31,7 @@ Gun.on('opt', function(at){
 Gun.on('put', function(at){
 	this.to.next(at);
 	if(!store){ return mqthen.push(at) }
-	var put = at.put, tables = {}, nosql = {};
+	var gun = at.gun.back(-1), put = at.put, check = {};
 	Gun.graph.is(put, null, function(value, field, node, soul){ var id;
 		block[soul] = node;
 		store.Record.get(id = soul+field).then(function(record){
@@ -43,17 +43,22 @@ Gun.on('put', function(at){
 			} else {
 				data.value = JSON.stringify(value);
 			}
+			check[id] = true;
 			block[id] = data;
 			store.Record.upsert(id, data).then(function(){
 				Gun.obj.del(block, id);
 				Gun.obj.del(block, soul);
-				//console.log("Saved", data);
-				// TODO: BUG! Ack saves!
+				check[id] = false;
+				if(Gun.obj.map(check, function(val){
+					if(val){ return true }
+				})){ return }
+				gun.on('in', {'@': at['#'], ok: 1});
 			}, function(e){
 				if(e && e.toString().indexOf('UNIQUE') >= 0){
 					// race condition in masterquest?
 					return;
 				}
+				gun.on('in', {'@': at['#'], err: e});
 			});
 		});
 	});
@@ -65,6 +70,7 @@ Gun.on('get', function(at){
 	var u;
 	var gun = at.gun;
 	var get = at.get;
+	if(!get){ return }
 	var soul = get['#'];
 	var field = get['.'];
 	if('_' === field){
