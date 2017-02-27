@@ -14,7 +14,10 @@ var Gun = require('gun');
 require('sqlite.gun');
 
 var gun = Gun({
-  file: false // turn off pesky file.js data.json default 
+  file: false // turn off pesky file.js data.json default
+  , sqlite: {
+    file: "gun.sqlite3"
+  }
 });
 ```
 
