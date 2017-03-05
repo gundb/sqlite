@@ -1,8 +1,8 @@
 var sqlite3 = require('sqlite3');
 var mq = require('masterquest-sqlite3');
 var Gun = require('gun/gun');
-var client;
-var store;
+require('./multi');
+var strict = require('./strict');
 
 var sqls = {};
 var block = {};
@@ -11,16 +11,18 @@ var mqthen = [];
 Gun.on('opt', function(at){
 	this.to.next(at);
 	if(at.once){ return }
-	var file = ((at.opt||{}).sqlite||{}).file || (__dirname + '/data.sqlite3');
-	client = sqls[file] || (sqls[file] = new sqlite3.Database(file));
-	
-	var schemae = [{
+	var opt = at.opt.sqlite || (at.opt.sqlite = {});
+	opt.file = opt.file || (__dirname + '/data.sqlite3');
+	opt.client = sqls[opt.file] || (sqls[opt.file] = new sqlite3.Database(opt.file));
+	opt.client.run("PRAGMA synchronous = 0"); // necessary for perf!
+	var tables = [{
 	  modelname: 'Record'
 	, indices: ['soul', 'field', 'value', 'relation', 'state'] // TODO: Test perf against only soul/field index?
 	}];
+	if(opt.tables){ tables.concat(opt.tables) }
 
-	mq.wrap(client, schemae).then(function(storage){
-		store = storage; // race condition!
+	mq.wrap(opt.client, tables).then(function(storage){
+		opt.store = storage;
 		mqthen.forEach(function(at){
 			Gun.on(at.get? 'get' : 'put', at);
 		});
@@ -30,9 +32,11 @@ Gun.on('opt', function(at){
 
 Gun.on('put', function(at){
 	this.to.next(at);
+	var gun = at.gun.back(-1), opt = gun.back('opt.sqlite'), store = opt.store;
 	if(!store){ return mqthen.push(at) }
-	var gun = at.gun.back(-1), put = at.put, check = {};
-	Gun.graph.is(put, null, function(value, field, node, soul){ var id;
+	if(opt.tables){ return strict.put(at, gun, opt, store) } // strict mode
+	var check = {};
+	Gun.graph.is(at.put, null, function(value, field, node, soul){ var id;
 		block[soul] = node;
 		store.Record.get(id = soul+field).then(function(record){
 			var data = {id: id, soul: soul, field: field, state: Gun.state.is(node, field)}, tmp;
@@ -66,13 +70,13 @@ Gun.on('put', function(at){
 
 Gun.on('get', function(at){
 	this.to.next(at);
+	var gun = at.gun.back(-1), opt = gun.back('opt.sqlite'), store = (opt||{}).store;
 	if(!store){ return mqthen.push(at) }
-	var u;
-	var gun = at.gun;
-	var get = at.get;
-	if(!get){ return }
-	var soul = get['#'];
-	var field = get['.'];
+	var lex = at.get, u;
+	if(!lex){ return }
+	var soul = lex['#'];
+	var field = lex['.'];
+	if(opt.tables){ return strict.get(at, gun, opt, store, soul, field) } // strict mode
 	if('_' === field){
 		return store.Record.find({soul: soul}, {limit:1}).then(function(record){
 			record = (record||[])[0] || block[soul];
