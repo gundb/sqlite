@@ -2,7 +2,7 @@ var Gun = require('gun/gun');
 
 function put(at, gun, opt, store){
 	var tables = {}, err, tmp;
-	Gun.graph.is(at.put, function(node, soul){ var type;
+	Gun.graph.is(at.put, function(node, soul){ var type, id;
 		if(store[soul]){
 			return;
 		}
@@ -48,7 +48,6 @@ function put(at, gun, opt, store){
 }
 
 function get(at, gun, opt, store, table, id, u){ var tmp;
-	!global.DAVE && console.log("get for dave:", table, id);
 	if('_' === id){
 		if(!store[table]){
 			return gun.on('in', {'@': at['#']});

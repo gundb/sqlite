@@ -19,20 +19,26 @@ Gun.on('opt', function(at){
 	  modelname: 'Record'
 	, indices: ['soul', 'field', 'value', 'relation', 'state'] // TODO: Test perf against only soul/field index?
 	}];
-	if(opt.tables){ tables.concat(opt.tables) }
+	if(opt.tables){ tables = tables.concat(opt.tables) }
 
 	mq.wrap(opt.client, tables).then(function(storage){
-		opt.store = storage;
+		opt.store = opt.store || storage;
 		mqthen.forEach(function(at){
-			Gun.on(at.get? 'get' : 'put', at);
+			if(at.get){
+				get(at);
+			} else {
+				put(at);
+			}
+			//Gun.on(at.get? 'get' : 'put', at);
 		});
 		mqthen = [];
 	});
 });
 
-Gun.on('put', function(at){
-	this.to.next(at);
-	var gun = at.gun.back(-1), opt = gun.back('opt.sqlite'), store = opt.store;
+Gun.on('put', put);
+function put(at){
+	if(this && this.to && this.to.next){ this.to.next(at) }
+	var gun = at.gun.back(-1), opt = gun.back('opt.sqlite'), store = (opt||{}).store;
 	if(!store){ return mqthen.push(at) }
 	if(opt.tables){ return strict.put(at, gun, opt, store) } // strict mode
 	var check = {};
@@ -66,10 +72,11 @@ Gun.on('put', function(at){
 			});
 		});
 	});
-});
+};
 
-Gun.on('get', function(at){
-	this.to.next(at);
+Gun.on('get', get);
+function get(at){
+	if(this && this.to && this.to.next){ this.to.next(at) }
 	var gun = at.gun.back(-1), opt = gun.back('opt.sqlite'), store = (opt||{}).store;
 	if(!store){ return mqthen.push(at) }
 	var lex = at.get, u;
@@ -109,7 +116,7 @@ Gun.on('get', function(at){
 		}
 		gun.on('in', {'@': at['#'], put: Gun.graph.node(node)});
 	});
-});
+};
 
 function nodeify(record, node){
 	if(!record){ return }
